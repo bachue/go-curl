@@ -1,3 +1,3 @@
-module github/YangSen-qn/go-curl
+module github.com/YangSen-qn/go-curl
 
 go 1.15
