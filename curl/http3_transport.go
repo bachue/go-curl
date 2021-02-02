@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	curl "github.com/YangSen-qn/go-curl/libcurl"
+	"github.com/YangSen-qn/go-curl/libcurl"
 )
 
 var (
@@ -22,10 +22,10 @@ type http3Transport struct {
 
 func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Response, err error) {
 	initOnce.Do(func() {
-		err = curl.GlobalInit(curl.GLOBAL_ALL)
+		err = libcurl.GlobalInit(libcurl.GLOBAL_ALL)
 	})
 
-	easy := curl.EasyInit()
+	easy := libcurl.EasyInit()
 	defer easy.Cleanup()
 
 	if easy == nil {
@@ -35,28 +35,38 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 
 	// request default
 	if t.CAPath != "" {
-		err = easy.Setopt(curl.OPT_CAPATH, t.CAPath)
+		err = easy.Setopt(libcurl.OPT_CAPATH, t.CAPath)
 	}
-	err = easy.Setopt(curl.OPT_SSL_VERIFYPEER, false) // 0 is ok
-	err = easy.Setopt(curl.OPT_HTTP_VERSION, curl.HTTP_VERSION_2)
+
+	err = easy.Setopt(libcurl.OPT_SSL_VERIFYPEER, true) // 0 is ok
+	if err != nil {
+		return
+	}
+
+	err = easy.Setopt(libcurl.OPT_HTTP_VERSION, libcurl.HTTP_VERSION_3)
+	if err != nil {
+		return
+	}
 
 	// request url
-	err = easy.Setopt(curl.OPT_URL, request.URL.String())
+	err = easy.Setopt(libcurl.OPT_URL, request.URL.String())
+	if err != nil {
+		return
+	}
 
 	// method
 	switch request.Method {
 	case http.MethodGet:
-		err = easy.Setopt(curl.OPT_HTTPGET, 1)
+		err = easy.Setopt(libcurl.OPT_HTTPGET, 1)
 	case http.MethodPost:
-		err = easy.Setopt(curl.OPT_POST, 1)
+		err = easy.Setopt(libcurl.OPT_POST, 1)
 	case http.MethodPut:
-		err = easy.Setopt(curl.OPT_PUT, 1)
+		err = easy.Setopt(libcurl.OPT_PUT, 1)
 	case http.MethodDelete:
 	case http.MethodHead:
-		err = easy.Setopt(curl.OPT_HEADER, 1)
+		err = easy.Setopt(libcurl.OPT_HEADER, 1)
 	default:
 	}
-
 	if err != nil {
 		return
 	}
@@ -66,15 +76,14 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	for key, _ := range request.Header {
 		requestHeader = append(requestHeader, key+":"+request.Header.Get(key))
 	}
-	err = easy.Setopt(curl.OPT_HTTPHEADER, requestHeader)
-
+	err = easy.Setopt(libcurl.OPT_HTTPHEADER, requestHeader)
 	if err != nil {
 		return
 	}
 
 	responseHeader := make(http.Header)
 	responseBody := new(bytes.Buffer)
-	err = easy.Setopt(curl.OPT_HEADERFUNCTION, func(headField []byte, userData interface{}) bool {
+	err = easy.Setopt(libcurl.OPT_HEADERFUNCTION, func(headField []byte, userData interface{}) bool {
 		keyValue := string(headField)
 		keyValueList := strings.SplitN(keyValue, ":", 2)
 		if len(keyValueList) != 2 {
@@ -89,8 +98,11 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 
 		return true
 	})
+	if err != nil {
+		return
+	}
 
-	err = easy.Setopt(curl.OPT_WRITEFUNCTION, func(buff []byte, userData interface{}) bool {
+	err = easy.Setopt(libcurl.OPT_WRITEFUNCTION, func(buff []byte, userData interface{}) bool {
 		_, err := responseBody.Write(buff)
 		if err != nil {
 			return false
@@ -98,8 +110,11 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 			return true
 		}
 	})
+	if err != nil {
+		return
+	}
 
-	err = easy.Setopt(curl.OPT_READFUNCTION, func(buff []byte, userData interface{}) int {
+	err = easy.Setopt(libcurl.OPT_READFUNCTION, func(buff []byte, userData interface{}) int {
 		len, err := request.Body.Read(buff)
 		if err == nil {
 			return len
@@ -107,11 +122,14 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 			return 0
 		}
 	})
+	if err != nil {
+		return
+	}
 
 	err = easy.Perform()
 
 	if err == nil {
-		statusCodeI, _ := easy.Getinfo(curl.INFO_HTTP_CODE)
+		statusCodeI, _ := easy.Getinfo(libcurl.INFO_HTTP_CODE)
 		statusCode, _ := statusCodeI.(int)
 
 		response = &http.Response{

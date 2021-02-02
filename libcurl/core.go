@@ -1,4 +1,3 @@
-// libcurl go bingding
 package libcurl
 
 /*

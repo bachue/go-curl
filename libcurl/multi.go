@@ -2,7 +2,6 @@
 // must skip it. https://github.com/andelf/go-curl/issues/48
 
 // +build !windows
-
 package libcurl
 
 /*

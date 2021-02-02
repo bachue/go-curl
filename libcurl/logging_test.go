@@ -1,4 +1,3 @@
-
 package libcurl
 
 import (
