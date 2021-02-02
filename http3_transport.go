@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/YangSen-qn/go-curl/curl"
+	curl "github.com/YangSen-qn/go-curl/libcurl"
 )
 
 var (
