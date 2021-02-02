@@ -1,4 +1,4 @@
-package curl
+package libcurl
 
 /*
 #include <stdlib.h>

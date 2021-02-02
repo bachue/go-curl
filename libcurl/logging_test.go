@@ -1,5 +1,5 @@
 
-package curl
+package libcurl
 
 import (
 	"testing"

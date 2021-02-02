@@ -1,4 +1,4 @@
-package curl
+package libcurl
 
 /*
 #cgo darwin CFLAGS: -I./include/

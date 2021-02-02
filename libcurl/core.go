@@ -1,5 +1,5 @@
 // libcurl go bingding
-package curl
+package libcurl
 
 /*
 // linux/darwin/windows

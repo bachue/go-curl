@@ -1,6 +1,6 @@
 //go:generate /usr/bin/env python ./misc/codegen.py
 
-package curl
+package libcurl
 /*
 #include "./include/curl.h"
 */

@@ -3,7 +3,7 @@
 
 // +build !windows
 
-package curl
+package libcurl
 
 /*
 #include <stdlib.h>
