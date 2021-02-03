@@ -12,6 +12,10 @@ import (
 	"github.com/YangSen-qn/go-curl/libcurl"
 )
 
+const (
+	Version = "2.0.0"
+)
+
 var (
 	initOnce = sync.Once{}
 )
