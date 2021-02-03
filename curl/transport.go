@@ -2,6 +2,8 @@ package curl
 
 import (
 	"net/http"
+
+	"github.com/YangSen-qn/go-curl/a"
 )
 
 type Transport struct {
@@ -12,6 +14,8 @@ type Transport struct {
 }
 
 func (t *Transport) RoundTrip(request *http.Request) (*http.Response, error) {
+	a.A()
+
 	if t.ForceHTTP3 {
 		transport := &http3Transport{CAPath: t.CAPath}
 		return transport.RoundTrip(request)
