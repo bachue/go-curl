@@ -1,6 +1,5 @@
 package curl
 
-import "C"
 import (
 	"bytes"
 	"errors"

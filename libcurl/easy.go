@@ -112,7 +112,7 @@ type CURL struct {
 // concurrent safe context map
 type contextMap struct {
 	items map[uintptr]*CURL
-	sync.RWMutex
+	sync.Mutex
 }
 
 func (c *contextMap) Set(k uintptr, v *CURL) {
