@@ -3,6 +3,7 @@ package curl
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -27,6 +28,8 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	easy := libcurl.EasyInit()
 	defer easy.Cleanup()
 
+	fmt.Printf("===== curl ========= \n")
+
 	if easy == nil {
 		err = errors.New("create easy handle error")
 		return
@@ -37,7 +40,12 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 		err = easy.Setopt(libcurl.OPT_CAPATH, t.CAPath)
 	}
 
-	err = easy.Setopt(libcurl.OPT_SSL_VERIFYPEER, false) // 0 is ok
+	err = easy.Setopt(libcurl.OPT_SSL_VERIFYHOST, 0) // 0 is ok
+	if err != nil {
+		return
+	}
+
+	err = easy.Setopt(libcurl.OPT_SSL_VERIFYPEER, 0) // 0 is ok
 	if err != nil {
 		return
 	}
@@ -131,6 +139,10 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	}
 
 	err = easy.Setopt(libcurl.OPT_READFUNCTION, func(buff []byte, userData interface{}) int {
+		if request.Body == nil {
+			return 0
+		}
+
 		len, err := request.Body.Read(buff)
 		if err == nil {
 			return len
