@@ -123,8 +123,8 @@ func (c *contextMap) Set(k uintptr, v *CURL) {
 }
 
 func (c *contextMap) Get(k uintptr) *CURL {
-	c.RLock()
-	defer c.RUnlock()
+	c.Lock()
+	defer c.Unlock()
 
 	return c.items[k]
 }

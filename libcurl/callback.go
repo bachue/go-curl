@@ -49,7 +49,13 @@ func goCallProgressFunction(dltotal, dlnow, ultotal, ulnow C.double, ctx unsafe.
 //export goCallReadFunction
 func goCallReadFunction(ptr *C.char, size C.size_t, ctx unsafe.Pointer) uintptr {
 	curl := context_map.Get(uintptr(ctx))
+	if curl == nil {
+		panic("read_callback curl error!")
+	}
 	buf := C.GoBytes(unsafe.Pointer(ptr), C.int(size))
+	if *curl.readFunction == nil {
+		panic("read_callback curl readFunction error!")
+	}
 	ret := (*curl.readFunction)(buf, curl.readData)
 	str := C.CString(string(buf))
 	defer C.free(unsafe.Pointer(str))

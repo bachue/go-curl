@@ -24,7 +24,7 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	initOnce.Do(func() {
 		err = libcurl.GlobalInit(libcurl.GLOBAL_ALL)
 	})
-
+	libcurl.GLOBAL_ALL
 	easy := libcurl.EasyInit()
 	defer easy.Cleanup()
 
