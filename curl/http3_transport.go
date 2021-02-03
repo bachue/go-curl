@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/YangSen-qn/go-curl/libcurl"
+	"github.com/YangSen-qn/go-curl/v2/libcurl"
 )
 
 const (
