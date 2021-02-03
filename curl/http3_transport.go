@@ -17,6 +17,7 @@ var (
 )
 
 type http3Transport struct {
+	ResolverList []string
 	CAPath string
 }
 
@@ -24,7 +25,6 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	initOnce.Do(func() {
 		err = libcurl.GlobalInit(libcurl.GLOBAL_ALL)
 	})
-	libcurl.GLOBAL_ALL
 	easy := libcurl.EasyInit()
 	defer easy.Cleanup()
 
@@ -80,6 +80,25 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	if err != nil {
 		return
 	}
+
+	// request resolver
+	resolverList := make([]string, 10)
+	if t.ResolverList != nil {
+		for _, resolver := range t.ResolverList {
+			resolverList = append(resolverList, resolver)
+		}
+	}
+	err = easy.Setopt(libcurl.OPT_RESOLVE, resolverList)
+	if err != nil {
+		return
+	}
+
+	err = easy.Setopt(libcurl.OPT_HTTPHEADER, requestHeader)
+	if err != nil {
+		return
+	}
+
+	10.200.20.57
 
 	responseHeader := make(http.Header)
 	responseBody := new(bytes.Buffer)
