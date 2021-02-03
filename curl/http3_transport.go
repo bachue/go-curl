@@ -37,7 +37,7 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 		err = easy.Setopt(libcurl.OPT_CAPATH, t.CAPath)
 	}
 
-	err = easy.Setopt(libcurl.OPT_SSL_VERIFYPEER, true) // 0 is ok
+	err = easy.Setopt(libcurl.OPT_SSL_VERIFYPEER, false) // 0 is ok
 	if err != nil {
 		return
 	}
