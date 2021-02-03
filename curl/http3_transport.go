@@ -98,8 +98,6 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 		return
 	}
 
-	10.200.20.57
-
 	responseHeader := make(http.Header)
 	responseBody := new(bytes.Buffer)
 	err = easy.Setopt(libcurl.OPT_HEADERFUNCTION, func(headField []byte, userData interface{}) bool {
