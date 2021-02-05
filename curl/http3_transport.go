@@ -3,7 +3,6 @@ package curl
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -23,6 +22,7 @@ var (
 type http3Transport struct {
 	ResolverList []string
 	CAPath string
+	HTTP3LogEnable bool
 }
 
 func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Response, err error) {
@@ -32,8 +32,6 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	easy := libcurl.EasyInit()
 	defer easy.Cleanup()
 
-	fmt.Printf("===== curl ========= \n")
-
 	if easy == nil {
 		err = errors.New("create easy handle error")
 		return
@@ -42,6 +40,16 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	// request default
 	if t.CAPath != "" {
 		err = easy.Setopt(libcurl.OPT_CAPATH, t.CAPath)
+		if err != nil {
+			return
+		}
+	}
+
+	if t.HTTP3LogEnable {
+		err = easy.Setopt(libcurl.OPT_VERBOSE, 1)
+		if err != nil {
+			return
+		}
 	}
 
 	err = easy.Setopt(libcurl.OPT_SSL_VERIFYHOST, 0) // 0 is ok
@@ -54,7 +62,7 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 		return
 	}
 
-	err = easy.Setopt(libcurl.OPT_HTTP_VERSION, libcurl.HTTP_VERSION_3)
+	err = easy.Setopt(libcurl.OPT_HTTP_VERSION, libcurl.HTTP_VERSION_1_1)
 	if err != nil {
 		return
 	}
@@ -93,16 +101,16 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	}
 
 	// request resolver
-	//resolverList := make([]string, 10)
-	//if t.ResolverList != nil {
-	//	for _, resolver := range t.ResolverList {
-	//		resolverList = append(resolverList, resolver)
-	//	}
-	//}
-	//err = easy.Setopt(libcurl.OPT_RESOLVE, resolverList)
-	//if err != nil {
-	//	return
-	//}
+	resolverList := make([]string, 10)
+	if t.ResolverList != nil {
+		for _, resolver := range t.ResolverList {
+			resolverList = append(resolverList, resolver)
+		}
+	}
+	err = easy.Setopt(libcurl.OPT_RESOLVE, resolverList)
+	if err != nil {
+		return
+	}
 
 	err = easy.Setopt(libcurl.OPT_HTTPHEADER, requestHeader)
 	if err != nil {

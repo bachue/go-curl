@@ -1,19 +1,18 @@
 package curl
 
 import (
-	"fmt"
 	"net/http"
 )
 
 type Transport struct {
 	Transport *http.Transport
 
-	CAPath     string
-	ForceHTTP3 bool
+	CAPath         string
+	ForceHTTP3     bool
+	HTTP3LogEnable bool
 }
 
 func (t *Transport) RoundTrip(request *http.Request) (*http.Response, error) {
-	fmt.Println("======== transport:", request.URL)
 
 	if t.ForceHTTP3 {
 		transport := &http3Transport{CAPath: t.CAPath}
@@ -22,4 +21,3 @@ func (t *Transport) RoundTrip(request *http.Request) (*http.Response, error) {
 		return t.Transport.RoundTrip(request)
 	}
 }
-

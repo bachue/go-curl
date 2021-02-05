@@ -19,7 +19,7 @@ import (
 func goCallHeaderFunction(ptr *C.char, size C.size_t, ctx unsafe.Pointer) uintptr {
 	curl := context_map.Get(uintptr(ctx))
 	buf := C.GoBytes(unsafe.Pointer(ptr), C.int(size))
-	if (*curl.headerFunction)(buf, curl.headerData) {
+	if curl != nil && (*curl.headerFunction)(buf, curl.headerData) {
 		return uintptr(size)
 	}
 	return C.CURL_WRITEFUNC_PAUSE
@@ -29,7 +29,7 @@ func goCallHeaderFunction(ptr *C.char, size C.size_t, ctx unsafe.Pointer) uintpt
 func goCallWriteFunction(ptr *C.char, size C.size_t, ctx unsafe.Pointer) uintptr {
 	curl := context_map.Get(uintptr(ctx))
 	buf := C.GoBytes(unsafe.Pointer(ptr), C.int(size))
-	if (*curl.writeFunction)(buf, curl.writeData) {
+	if curl != nil && (*curl.writeFunction)(buf, curl.writeData) {
 		return uintptr(size)
 	}
 	return C.CURL_WRITEFUNC_PAUSE
@@ -38,7 +38,7 @@ func goCallWriteFunction(ptr *C.char, size C.size_t, ctx unsafe.Pointer) uintptr
 //export goCallProgressFunction
 func goCallProgressFunction(dltotal, dlnow, ultotal, ulnow C.double, ctx unsafe.Pointer) int {
 	curl := context_map.Get(uintptr(ctx))
-	if (*curl.progressFunction)(float64(dltotal), float64(dlnow),
+	if curl != nil && (*curl.progressFunction)(float64(dltotal), float64(dlnow),
 		float64(ultotal), float64(ulnow),
 		curl.progressData) {
 		return 0
@@ -49,17 +49,11 @@ func goCallProgressFunction(dltotal, dlnow, ultotal, ulnow C.double, ctx unsafe.
 //export goCallReadFunction
 func goCallReadFunction(ptr *C.char, size C.size_t, ctx unsafe.Pointer) uintptr {
 	curl := context_map.Get(uintptr(ctx))
-	if curl == nil {
-		panic("read_callback curl error!")
-	}
 	buf := C.GoBytes(unsafe.Pointer(ptr), C.int(size))
-	if *curl.readFunction == nil {
-		panic("read_callback curl readFunction error!")
-	}
 	ret := (*curl.readFunction)(buf, curl.readData)
 	str := C.CString(string(buf))
 	defer C.free(unsafe.Pointer(str))
-	if C.memcpy(unsafe.Pointer(ptr), unsafe.Pointer(str), C.size_t(ret)) == nil {
+	if curl != nil && C.memcpy(unsafe.Pointer(ptr), unsafe.Pointer(str), C.size_t(ret)) == nil {
 		panic("read_callback memcpy error!")
 	}
 	return uintptr(ret)
