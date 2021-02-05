@@ -93,16 +93,16 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	}
 
 	// request resolver
-	resolverList := make([]string, 10)
-	if t.ResolverList != nil {
-		for _, resolver := range t.ResolverList {
-			resolverList = append(resolverList, resolver)
-		}
-	}
-	err = easy.Setopt(libcurl.OPT_RESOLVE, resolverList)
-	if err != nil {
-		return
-	}
+	//resolverList := make([]string, 10)
+	//if t.ResolverList != nil {
+	//	for _, resolver := range t.ResolverList {
+	//		resolverList = append(resolverList, resolver)
+	//	}
+	//}
+	//err = easy.Setopt(libcurl.OPT_RESOLVE, resolverList)
+	//if err != nil {
+	//	return
+	//}
 
 	err = easy.Setopt(libcurl.OPT_HTTPHEADER, requestHeader)
 	if err != nil {
