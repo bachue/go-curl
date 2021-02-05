@@ -2,8 +2,8 @@ package libcurl
 
 /*
 #cgo CFLAGS: -I./include/
-#cgo darwin LDFLAGS: -framework Security -framework Foundation -L${SRCDIR}/darwin/ -lcurl -lcrypto -lquiche -lssl
-#cgo linux  LDFLAGS: -framework Security -framework Foundation -L${SRCDIR}/linux/ -lcurl -lcrypto -lquiche -lssl
+#cgo darwin LDFLAGS: -framework Security -framework Foundation -L${SRCDIR}/darwin -lcurl -lcrypto -lquiche -lssl
+#cgo linux  LDFLAGS: -L${SRCDIR}/linux -lcurl -lcrypto -lquiche -lssl
 
 #include <stdlib.h>
 #include <string.h>
