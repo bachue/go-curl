@@ -62,7 +62,7 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 		return
 	}
 
-	err = easy.Setopt(libcurl.OPT_HTTP_VERSION, libcurl.HTTP_VERSION_1_1)
+	err = easy.Setopt(libcurl.OPT_HTTP_VERSION, libcurl.HTTP_VERSION_3)
 	if err != nil {
 		return
 	}
