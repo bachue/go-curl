@@ -107,6 +107,10 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 		return
 	}
 
+	if body := request.Body; body != nil {
+		easy.Setopt(libcurl.OPT_POSTFIELDSIZE, request.ContentLength)
+	}
+
 	// request resolver
 	resolverList := make([]string, 10)
 	if t.ResolverList != nil {
