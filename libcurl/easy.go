@@ -126,7 +126,8 @@ func (c *contextMap) Get(k uintptr) *CURL {
 	c.RLock()
 	defer c.RUnlock()
 
-	return c.items[k]
+	v := c.items[k]
+	return v
 }
 
 func (c *contextMap) Delete(k uintptr) {
@@ -160,8 +161,8 @@ func (curl *CURL) Duphandle() *CURL {
 func (curl *CURL) Cleanup() {
 	p := curl.handle
 	C.curl_easy_cleanup(p)
-	curl.MallocFreeAfter(0)
 	context_map.Delete(uintptr(p))
+	curl.MallocFreeAfter(0)
 }
 
 // curl_easy_setopt - set options for a curl easy handle

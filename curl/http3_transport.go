@@ -11,12 +11,11 @@ import (
 	"github.com/YangSen-qn/go-curl/v2/libcurl"
 )
 
-const (
-	Version = "2.0.2"
-)
 
 var (
 	initOnce = sync.Once{}
+
+	easyLock sync.Mutex
 )
 
 type http3Transport struct {
@@ -29,8 +28,16 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	initOnce.Do(func() {
 		err = libcurl.GlobalInit(libcurl.GLOBAL_ALL)
 	})
+
+	easyLock.Lock()
 	easy := libcurl.EasyInit()
-	defer easy.Cleanup()
+	easyLock.Unlock()
+
+	defer func() {
+		easyLock.Lock()
+		easy.Cleanup()
+		easyLock.Unlock()
+	}()
 
 	if easy == nil {
 		err = errors.New("create easy handle error")
