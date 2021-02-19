@@ -22,6 +22,7 @@ type http3Transport struct {
 	ResolverList []string
 	CAPath string
 	HTTP3LogEnable bool
+	Timeout float64
 }
 
 func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Response, err error) {
@@ -123,7 +124,10 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 		return
 	}
 
-	err = easy.Setopt(libcurl.OPT_HTTPHEADER, requestHeader)
+	if t.Timeout > 0 {
+		err = easy.Setopt(libcurl.OPT_TIMEOUT, int(t.Timeout))
+	}
+
 	if err != nil {
 		return
 	}
