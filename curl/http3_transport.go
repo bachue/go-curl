@@ -11,7 +11,6 @@ import (
 	"github.com/YangSen-qn/go-curl/v2/libcurl"
 )
 
-
 var (
 	initOnce = sync.Once{}
 
@@ -19,10 +18,11 @@ var (
 )
 
 type http3Transport struct {
-	ResolverList []string
-	CAPath string
+	ResolverList   []string
+	CAPath         string
 	HTTP3LogEnable bool
-	Timeout float64
+	ConnectTimeout int64
+	Timeout        int64
 }
 
 func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Response, err error) {
@@ -113,19 +113,29 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	}
 
 	// request resolver
-	resolverList := make([]string, 10)
-	if t.ResolverList != nil {
+	if len(t.ResolverList) > 0 {
+		resolverList := make([]string, 10)
+
 		for _, resolver := range t.ResolverList {
 			resolverList = append(resolverList, resolver)
 		}
+
+		err = easy.Setopt(libcurl.OPT_RESOLVE, resolverList)
+		if err != nil {
+			return
+		}
 	}
-	err = easy.Setopt(libcurl.OPT_RESOLVE, resolverList)
+
+	if t.Timeout > 0 {
+		err = easy.Setopt(libcurl.OPT_TIMEOUT_MS, t.Timeout)
+	}
+
 	if err != nil {
 		return
 	}
 
-	if t.Timeout > 0 {
-		err = easy.Setopt(libcurl.OPT_TIMEOUT, int(t.Timeout))
+	if t.ConnectTimeout > 0 {
+		err = easy.Setopt(libcurl.OPT_CONNECTTIMEOUT_MS, t.ConnectTimeout)
 	}
 
 	if err != nil {

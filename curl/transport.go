@@ -2,6 +2,7 @@ package curl
 
 import (
 	"net/http"
+	"time"
 )
 
 type Transport struct {
@@ -10,6 +11,7 @@ type Transport struct {
 	CAPath         string
 	ForceHTTP3     bool
 	HTTP3LogEnable bool
+	Timeout        int64 // 单位：ms
 }
 
 func (t *Transport) RoundTrip(request *http.Request) (*http.Response, error) {
@@ -19,7 +21,8 @@ func (t *Transport) RoundTrip(request *http.Request) (*http.Response, error) {
 			ResolverList:   nil,
 			CAPath:         t.CAPath,
 			HTTP3LogEnable: t.HTTP3LogEnable,
-			Timeout:        t.Transport.IdleConnTimeout.Seconds(),
+			ConnectTimeout: int64(t.Transport.IdleConnTimeout / time.Millisecond),
+			Timeout:        t.Timeout,
 		}
 		return transport.RoundTrip(request)
 	} else {
