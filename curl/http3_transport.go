@@ -88,11 +88,9 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	case http.MethodPost:
 		err = easy.Setopt(libcurl.OPT_POST, 1)
 	case http.MethodPut:
-		err = easy.Setopt(libcurl.OPT_PUT, 1)
-	case http.MethodDelete:
-	case http.MethodHead:
-		err = easy.Setopt(libcurl.OPT_HEADER, 1)
+		err = easy.Setopt(libcurl.OPT_UPLOAD, 1)
 	default:
+		err = easy.Setopt(libcurl.OPT_CUSTOMREQUEST, request.Method)
 	}
 	if err != nil {
 		return
@@ -109,7 +107,13 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	}
 
 	if body := request.Body; body != nil {
-		easy.Setopt(libcurl.OPT_POSTFIELDSIZE, request.ContentLength)
+		switch request.Method {
+		case http.MethodPost:
+			err = easy.Setopt(libcurl.OPT_POSTFIELDSIZE, request.ContentLength)
+		case http.MethodPut:
+			err = easy.Setopt(libcurl.OPT_INFILESIZE, request.ContentLength)
+		default:
+		}
 	}
 
 	// request resolver
