@@ -101,10 +101,11 @@ type CURL struct {
 	// callback functions, bool ret means ok or not
 	headerFunction, writeFunction *func([]byte, interface{}) bool
 	readFunction                  *func([]byte, interface{}) int // return num of bytes writed to buf
+        debugFunction                 *func([]byte, interface{}) int
 	progressFunction              *func(float64, float64, float64, float64, interface{}) bool
 	fnmatchFunction               *func(string, string, interface{}) int
 	// callback datas
-	headerData, writeData, readData, progressData, fnmatchData interface{}
+	headerData, writeData, readData, progressData, debugData, fnmatchData interface{}
 	// list of C allocs
 	mallocAllocs []*C.char
 }
@@ -187,6 +188,19 @@ func (curl *CURL) Setopt(opt int, param interface{}) error {
 	case opt == OPT_WRITEDATA: // OPT_FILE
 		curl.writeData = param
 		return nil
+	case opt == OPT_DEBUGDATA: // OPT_FILE
+		curl.debugData = param
+		return nil
+        case opt == OPT_DEBUGFUNCTION:
+		fun := param.(func([]byte, interface{}) int)
+		curl.debugFunction = &fun
+
+		ptr := C.return_debug_function()
+		if err := newCurlError(C.curl_easy_setopt_pointer(p, C.CURLoption(opt), ptr)); err == nil {
+			return newCurlError(C.curl_easy_setopt_pointer(p, OPT_DEBUGDATA, unsafe.Pointer(curl.handle)))
+		} else {
+			return err
+		}
 
 	case opt == OPT_READFUNCTION:
 		fun := param.(func([]byte, interface{}) int)

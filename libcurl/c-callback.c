@@ -40,3 +40,18 @@ int progress_function(void *ctx, double dltotal, double dlnow, double ultotal, d
 void *return_progress_function() {
     return (void *)progress_function;
 }
+
+/* for OPT_DEBUGFUNCTION */
+int debug_function(CURL *handle, curl_infotype type, char *data, size_t size, void *ctx) {
+	switch (type) {
+	case CURLINFO_TEXT:
+	case CURLINFO_HEADER_IN:
+	case CURLINFO_HEADER_OUT:
+	case CURLINFO_END:
+		return goCallDebugFunction(data, size, ctx);
+        }
+}
+
+void *return_debug_function() {
+    return (void *)&debug_function;
+}

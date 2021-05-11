@@ -3,7 +3,7 @@ package libcurl
 /*
 #cgo CFLAGS: -I./include/
 #cgo darwin LDFLAGS: -framework Security -framework Foundation -L${SRCDIR}/darwin -lcurl -lcrypto -lquiche -lssl
-#cgo linux  LDFLAGS: -Wl,--no-as-needed -ldl -L${SRCDIR}/linux -lcurl -lcrypto -lquiche -lssl
+#cgo linux  LDFLAGS: -Wl,--no-as-needed -ldl -L${SRCDIR}/linux -lcurl -lcrypto -lquiche -lssl -lz
 
 #include <stdlib.h>
 #include <string.h>
@@ -57,4 +57,15 @@ func goCallReadFunction(ptr *C.char, size C.size_t, ctx unsafe.Pointer) uintptr 
 		panic("read_callback memcpy error!")
 	}
 	return uintptr(ret)
+}
+
+//export goCallDebugFunction
+func goCallDebugFunction(ptr *C.char, size C.size_t, ctx unsafe.Pointer) int {
+	curl := context_map.Get(uintptr(ctx))
+	data := C.GoBytes(unsafe.Pointer(ptr), C.int(size))
+        if curl != nil && curl.debugFunction != nil {
+        	return (*curl.debugFunction)(data, curl.debugData)
+        } else {
+		return 0
+        }
 }
