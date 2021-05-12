@@ -5,6 +5,7 @@ package curl
 import "C"
 
 import (
+        "fmt"
 	"bytes"
 	"errors"
 	"io/ioutil"
@@ -40,6 +41,7 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 
 	easyLock.Lock()
 	easy := libcurl.EasyInit()
+        randNum := rander.Uint64()
 	easyLock.Unlock()
 
 	defer func() {
@@ -84,9 +86,6 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	}
 
 	// request url
-	easyLock.Lock()
-	randNum := rander.Uint64()
-	easyLock.Unlock()
         query := request.URL.Query()
         query.Add("q", strconv.FormatUint(randNum, 10))
         request.URL.RawQuery = query.Encode()
@@ -220,6 +219,7 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	}
 
 	err = easy.Setopt(libcurl.OPT_DEBUGFUNCTION, func(buff []byte, userData interface{}) int {
+                fmt.Printf("*** [%s] [%d] %s", time.Now().Format(time.RFC3339Nano), randNum, buff)
 		return 0
 	})
 	if err != nil {
