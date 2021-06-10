@@ -1,21 +1,22 @@
 package curl
 
-// #cgo LDFLAGS: -pthread
 // #include <pthread.h>
+// #include "../libcurl/include/curl.h"
 import "C"
 
 import (
-        "fmt"
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
+	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
-        "time"
-        "math/rand"
-        "strconv"
+	"time"
 
 	"github.com/YangSen-qn/go-curl/v2/libcurl"
 )
@@ -23,7 +24,7 @@ import (
 var (
 	initOnce = sync.Once{}
 	easyLock sync.Mutex
-        rander = rand.New(rand.NewSource(time.Now().UnixNano()))
+	rander   = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
 type http3Transport struct {
@@ -34,6 +35,7 @@ type http3Transport struct {
 
 func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Response, err error) {
 	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 
 	initOnce.Do(func() {
 		err = libcurl.GlobalInit(libcurl.GLOBAL_ALL)
@@ -41,7 +43,7 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 
 	easyLock.Lock()
 	easy := libcurl.EasyInit()
-        randNum := rander.Uint64()
+	randNum := rander.Uint64()
 	easyLock.Unlock()
 
 	defer func() {
@@ -86,9 +88,9 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	}
 
 	// request url
-        query := request.URL.Query()
-        query.Add("q", strconv.FormatUint(randNum, 10))
-        request.URL.RawQuery = query.Encode()
+	query := request.URL.Query()
+	query.Add("q", strconv.FormatUint(randNum, 10))
+	request.URL.RawQuery = query.Encode()
 	err = easy.Setopt(libcurl.OPT_URL, request.URL.String())
 	if err != nil {
 		return
@@ -125,13 +127,11 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 		return
 	}
 
-	if body := request.Body; body != nil {
-		switch request.Method {
-		case http.MethodPut:
-			err = easy.Setopt(libcurl.OPT_INFILESIZE, request.ContentLength)
-		default:
-			err = easy.Setopt(libcurl.OPT_POSTFIELDSIZE, request.ContentLength)
-		}
+	switch request.Method {
+	case http.MethodPut:
+		err = easy.Setopt(libcurl.OPT_INFILESIZE, request.ContentLength)
+	case http.MethodPost:
+		err = easy.Setopt(libcurl.OPT_POSTFIELDSIZE, request.ContentLength)
 	}
 	if err != nil {
 		return
@@ -164,7 +164,7 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	if err != nil {
 		return
 	}
-	err = easy.Setopt(libcurl.OPT_CONNECTTIMEOUT, 5)
+	err = easy.Setopt(libcurl.OPT_CONNECTTIMEOUT, 30)
 	if err != nil {
 		return
 	}
@@ -219,7 +219,7 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	}
 
 	err = easy.Setopt(libcurl.OPT_DEBUGFUNCTION, func(buff []byte, userData interface{}) int {
-                fmt.Printf("*** [%s] [%d] %s", time.Now().Format(time.RFC3339Nano), randNum, buff)
+		fmt.Printf("*** [%s] [%d] %s", time.Now().Format(time.RFC3339Nano), randNum, buff)
 		return 0
 	})
 	if err != nil {
@@ -227,6 +227,13 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	}
 
 	err = easy.Perform()
+
+	if curlErr, ok := err.(libcurl.CurlError); ok {
+		if curlErr == C.CURLE_OPERATION_TIMEDOUT {
+			fmt.Printf("*** [%s] FATAL ERROR: CURL TIMEOUT, URL = %s, randNum = %d\n", time.Now().Format(time.RFC3339Nano), request.URL, randNum)
+			os.Exit(1)
+		}
+	}
 
 	if err == nil {
 		statusCodeI, _ := easy.Getinfo(libcurl.INFO_HTTP_CODE)
