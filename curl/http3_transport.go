@@ -164,7 +164,7 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	if err != nil {
 		return
 	}
-	err = easy.Setopt(libcurl.OPT_CONNECTTIMEOUT, 30)
+	err = easy.Setopt(libcurl.OPT_CONNECTTIMEOUT, 64)
 	if err != nil {
 		return
 	}
