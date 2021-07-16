@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -231,7 +230,6 @@ func (t *http3Transport) RoundTrip(request *http.Request) (response *http.Respon
 	if curlErr, ok := err.(libcurl.CurlError); ok {
 		if curlErr == C.CURLE_OPERATION_TIMEDOUT {
 			fmt.Printf("*** [%s] FATAL ERROR: CURL TIMEOUT, URL = %s, randNum = %d\n", time.Now().Format(time.RFC3339Nano), request.URL, randNum)
-			os.Exit(1)
 		}
 	}
 
